@@ -1,5 +1,6 @@
 const data = {
     users: [
+       
         {
             name: 'Md Ibrahim Khan',
             email: 'ibrahim2013khan@gmail.com',
@@ -14,6 +15,7 @@ const data = {
             phone: '01946140942',
             address: 'Mouchak, Malibagh',
         },
+        
     ],
 };
 module.exports = data;

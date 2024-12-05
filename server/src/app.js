@@ -1,28 +1,29 @@
 const express = require('express');
 const morgan = require('morgan');
 const createError = require('http-errors');
+const dotenv = require('dotenv');
 const userRouter = require('./Router/router');
-const { seedUser } = require('./Controller/seedController');
 const seedRouter = require('./Router/seedRouter');
 const app = express();
 const {errorResponse} = require('./Controller/responseController');
 
+dotenv.config();
+
+// Middleware
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
+// Routes
 app.use("/api/users", userRouter);
 app.use("/api/seed", seedRouter);
 
-
+// Test endpoint
 app.get("/test", (req,res) => {
     res.status(200).send({
         message: "api is testing working fine",
     });
 });
-
-
-
 
 
 // client error handling
@@ -32,9 +33,10 @@ app.use((req, res, next) => {
 
 // server error handling -> all the errors
 app.use((err,req, res, next) => {
+  console.error(`Error: ${err.message}`); 
   return errorResponse(res, {
-    statusCode: err.status,
-    message: err.message
+    statusCode: err.status || 500,
+    message: err.message || "Internal Server Error",
   });
 });
 
