@@ -68,7 +68,7 @@ const getUserByID = async (req, res, next) => {
 const deleteUserById = async (req, res, next) => {
     try {
         const id = req.params.id;
-        const fetchedUser = await findWithId(id, USER_EXCLUDE_OPTIONS);
+        const fetchedUser = await findWithId(user, id, USER_EXCLUDE_OPTIONS);
 
         const userImagePath = fetchedUser.image;
         try {
