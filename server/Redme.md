@@ -94,3 +94,4 @@ Middleware
 23. add multer middleware for file upload
 24. POST /api/users -> create an user
 25. PUT /api/users/:id -> update a single user by id
+26. PUT /api/users/:id -> update a single user by id
