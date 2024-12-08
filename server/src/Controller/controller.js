@@ -3,6 +3,8 @@ const createError = require('http-errors');
 const user = require('../Model/model'); 
 const { successResponse } = require('./responseController');
 const findWithId = require('../services/findItem');
+const { createJsonWebToken } = require('../../helper/jwonwebtoken');
+const { jwtActivationKey } = require('../secret');
 
 // Reusable user query options
 const USER_EXCLUDE_OPTIONS = { password: 0 };
@@ -99,14 +101,19 @@ const processRegister = async (req, res, next) => {
             throw createError(409, 'User with this email already exits. please sign in');
         }
 
-        const newuser = {
-            name, email, password, phone, address,
-        };
+        // create jwt
+        const token = createJsonWebToken(
+            {name, email, password, phone, address}, 
+            jwtActivationKey, 
+            '10m'
+        );
+
+        console.log(token)
 
         return successResponse(res, {
             statusCode: 200,
             message: 'User was created successfully',
-            payload: {newuser}
+            payload: {token}
         });
     } catch (error) {
         next(error);
