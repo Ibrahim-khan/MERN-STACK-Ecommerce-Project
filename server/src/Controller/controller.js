@@ -1,10 +1,12 @@
 const fs = require('fs').promises; // Use promises for cleaner handling
 const createError = require('http-errors');
+const jwt = require('jsonwebtoken');
 const user = require('../Model/model'); 
 const { successResponse } = require('./responseController');
 const findWithId = require('../services/findItem');
 const { createJsonWebToken } = require('../../helper/jwonwebtoken');
-const { jwtActivationKey } = require('../secret');
+const { jwtActivationKey, clientURL } = require('../secret');
+const emailWithNodeMailer = require('../../helper/email');
 
 // Reusable user query options
 const USER_EXCLUDE_OPTIONS = { password: 0 };
@@ -108,11 +110,33 @@ const processRegister = async (req, res, next) => {
             '10m'
         );
 
+        // prepare email
+         const emailData = {
+            email,
+            subject: 'Account Activation Email',
+            html: `
+                <h2>Hello ${name} !</h2>
+                <p>Please click here to <a href ="${clientURL}/
+                api/users/activate/${token}" target="_blank"> activate
+                your account</a> </p>
+            `
+         }
+
+
+        // send email with nodemailer
+        try {
+            await emailWithNodeMailer(emailData)
+        } catch (emailError) {
+            next(createError(500, 'Failed to send verification email'));
+            return ;
+        }
+
+
         console.log(token)
 
         return successResponse(res, {
             statusCode: 200,
-            message: 'User was created successfully',
+            message: `Please go to your ${email} for completing your registration process`,
             payload: {token}
         });
     } catch (error) {
@@ -120,4 +144,41 @@ const processRegister = async (req, res, next) => {
     }
 };
 
-module.exports = { getUsers, getUserByID, deleteUserById, processRegister };
+const activateUserAccount = async (req, res, next) => {
+    try {
+        const token = req.body.token;
+        if (!token) {
+            throw createError(404, 'Token not found');
+        }
+
+        const decoded = jwt.verify(token, jwtActivationKey);
+        if (!decoded) {
+            throw createError(401, 'User was not able to be verified');
+        }
+
+        const userExists = await user.exists({email: decoded.email});
+        if (userExists) {
+            throw createError(409, 'User with this email already exits. please sign in');
+        }
+
+
+        await user.create(decoded);
+
+        return successResponse(res, {
+            statusCode: 201,
+            message: "User was registered successfully",
+        });
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            next(createError(401, 'Token has expired'));
+        } else if (error.name === 'JsonWebTokenError') {
+            next(createError(401, 'Invalid Token'));
+        } else {
+            next(error);
+        }
+    }
+};
+
+
+
+module.exports = { getUsers, getUserByID, deleteUserById, processRegister, activateUserAccount };

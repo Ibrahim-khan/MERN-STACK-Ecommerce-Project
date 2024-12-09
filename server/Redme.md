@@ -95,3 +95,10 @@ Middleware
 24. POST /api/users -> create an user
 25. PUT /api/users/:id -> update a single user by id
 26. PUT /api/users/:id -> update a single user by id
+27. create JWT
+28. setup smtp server & prepare email
+29. send email
+30. POST/api/users/verify -> verify + register into database
+31. add express validator middleware
+32. add multer middleware for file upload
+33. PUT /api/users/:id -> update a single user by id
