@@ -7,6 +7,8 @@ const findWithId = require('../services/findItem');
 const { createJsonWebToken } = require('../../helper/jwonwebtoken');
 const { jwtActivationKey, clientURL } = require('../secret');
 const emailWithNodeMailer = require('../../helper/email');
+const runValidation = require('../validators');
+const { options } = require('../Router/router');
 
 // Reusable user query options
 const USER_EXCLUDE_OPTIONS = { password: 0 };
@@ -179,6 +181,56 @@ const activateUserAccount = async (req, res, next) => {
     }
 };
 
+const updateUserById = async (req, res, next) => {
+    try {
+        const userId = req.params.id;
+        const options = {password: 0};
+        await findWithId(user, userId, options);
+
+        const updateOptions = {new: true, runValidators: 
+            true, context: 'query'};
+        let updates = {};
+        // name, email, password, phone, address, image
+        const ALLOWED_FIELDS = ['name', 'password', 'phone', 'address'];
+            for (let key in req.body) {
+                if (ALLOWED_FIELDS.includes(key)) {
+                    updates[key] = req.body[key];
+                }
+            }
+
+        const image = req.file;
+        if(image){
+            if(image.size > 1024 * 1024 * 2) {
+                throw createError(400, 'File too large. It must be less than 2 MB');
+            }
+            updates.image = image.buffer.toString('base64');
+        }
+
+        const updatedUser = await user.findByIdAndUpdate
+        (userId, updates, updateOptions).select("-password");
+
+        if(!updatedUser){
+            throw createError(404, 'User with this ID does not exist');
+        }
 
 
-module.exports = { getUsers, getUserByID, deleteUserById, processRegister, activateUserAccount };
+        return successResponse(res, {
+            statusCode: 200,
+            message: 'User was updated successfully',
+            payload: {updatedUser},
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+module.exports = { 
+    getUsers, 
+    getUserByID, 
+    deleteUserById, 
+    processRegister, 
+    activateUserAccount,
+    updateUserById 
+};
