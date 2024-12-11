@@ -6,6 +6,7 @@ const userRouter = require('./Router/router');
 const seedRouter = require('./Router/seedRouter');
 const app = express();
 const {errorResponse} = require('./Controller/responseController');
+const authRouter = require('./Router/authRouter');
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.urlencoded({extended: true}));
 // Routes
 app.use("/api/users", userRouter);
 app.use("/api/seed", seedRouter);
+app.use("/api/auth", authRouter);
 
 // Test endpoint
 app.get("/test", (req,res) => {

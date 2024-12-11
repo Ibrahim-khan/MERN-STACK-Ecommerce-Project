@@ -1,0 +1,31 @@
+const createError = require('http-errors');
+const jwt = require('jsonwebtoken');
+const user = require('../Model/model'); 
+const { successResponse } = require('./responseController');
+const { createJsonWebToken } = require('../../helper/jwonwebtoken');
+
+const handleLogin = async(req, res, next) => {
+    try {
+        // email, password req.body
+        const { email, password} = req.body;
+        // isExist
+        const user = await user.findOne({email});
+        if(!user){
+            throw createError (404, 'User does not exist with this email. Please register first');
+        }
+        // compare the password
+        // isBanned
+        // token, cookie
+
+        // success response
+        return successResponse(res, {
+            statusCode: 200,
+            message: 'Users loggedin successfully',
+            payload: {},
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+module.exports = {handleLogin}
