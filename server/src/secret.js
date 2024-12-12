@@ -11,6 +11,10 @@ const jwtActivationKey =
 process.env.JWT_ACTIVATION_KEY || 
 'sdffdgere3547yrbfg';
 
+const jwtAccessKey = 
+process.env.JWT_ACCESS_KEY || 
+'sdffdgere3547yrbfg';
+
 const smtpUsername = 
 process.env.SMTP_USERNAME || '';
 
@@ -30,6 +34,7 @@ module.exports = {
     smtpUsername,
     smtpPassword,
     clientURL,
+    jwtAccessKey
 };
 
 

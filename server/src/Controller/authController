@@ -1,6 +1,9 @@
+const { jwtAccessKey } = require('../secret');
 const createError = require('http-errors');
 const jwt = require('jsonwebtoken');
-const user = require('../Model/model'); 
+const bcrypt = require('bcryptjs')
+
+const User = require('../Model/model'); 
 const { successResponse } = require('./responseController');
 const { createJsonWebToken } = require('../../helper/jwonwebtoken');
 
@@ -9,13 +12,40 @@ const handleLogin = async(req, res, next) => {
         // email, password req.body
         const { email, password} = req.body;
         // isExist
-        const user = await user.findOne({email});
-        if(!user){
+        const existingUser = await User.findOne({email});
+        if(!existingUser){
             throw createError (404, 'User does not exist with this email. Please register first');
         }
         // compare the password
+        const isPasswordMatch = await bcrypt.compare
+        (password, existingUser.password);
+        if(!isPasswordMatch){
+            throw createError(
+                401,
+                'Email/Password did not match'
+            );
+        }
         // isBanned
+        if(existingUser.isBanned){
+            throw createError(
+                403,
+                'You are Banned. Please contact authority'
+            );
+        }
         // token, cookie
+        // create jwt
+        const accessToken = createJsonWebToken(
+            {id: existingUser._id, email: existingUser.email}, 
+            jwtAccessKey, 
+            '10m'
+        ); 
+        
+        res.cookie('accessToken', accessToken,{
+            maxAge: 15 * 60 * 1000, // 15 minutes
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+        });
 
         // success response
         return successResponse(res, {
@@ -28,4 +58,19 @@ const handleLogin = async(req, res, next) => {
     }
 }
 
-module.exports = {handleLogin}
+const handleLogout = async(req, res, next) => {
+    try {
+        res.clearCookie('access_token');
+
+        // success response
+        return successResponse(res, {
+            statusCode: 200,
+            message: 'Users logged out successfully',
+            payload: {},
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+module.exports = {handleLogin, handleLogout}

@@ -1,17 +1,35 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
+const bodyParser = require('body-parser');
 const createError = require('http-errors');
-const dotenv = require('dotenv');
+const rateLimit = require('express-rate-limit');
+
+
 const userRouter = require('./Router/router');
+const {seedUser} = require('./Controller/seedController');
 const seedRouter = require('./Router/seedRouter');
-const app = express();
 const {errorResponse} = require('./Controller/responseController');
 const authRouter = require('./Router/authRouter');
 
+const dotenv = require('dotenv');
+const app = express();
+
 dotenv.config();
 
+const rateLimiter = rateLimit({
+  windows: 1 * 60 * 1000, // 1 minute,
+  max: 5,
+  message: 'Too many request from this IP. Please try again later',
+});
+
 // Middleware
+app.use(cookieParser());
+app.use(rateLimiter);
 app.use(morgan('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
+
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
@@ -41,6 +59,8 @@ app.use((err,req, res, next) => {
     message: err.message || "Internal Server Error",
   });
 });
+
+
 
 
 module.exports = app;
