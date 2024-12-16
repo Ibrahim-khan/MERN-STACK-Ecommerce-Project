@@ -41,7 +41,25 @@ const validateUserRegistration = [
         .optional()
         .isString()
 ];
+
 // sign in validation
+const validateUserLogin = [
+
+    body("email")
+        .trim()
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage('Invalid Email address'),
+
+    body("password")
+        .trim()
+        .notEmpty()
+        .withMessage("Password is required")
+        .isLength({min: 6})
+        .withMessage('Password shuld be at least 6 characters long'),
+
+];
 
 
-module.exports = {validateUserRegistration}
+module.exports = {validateUserRegistration, validateUserLogin}
